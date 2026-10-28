@@ -67,6 +67,12 @@ button:disabled{opacity:.5;cursor:default}
 #cardWrap{display:flex;flex-direction:column;gap:8px}
 #cardImg{width:100%;border-radius:16px;display:block;box-shadow:0 8px 28px rgba(0,0,0,.25)}
 .tip{font-size:14px;opacity:.85;margin:0}
+.connect{border:1.5px solid var(--line);background:var(--surface);border-radius:24px;padding:22px 20px;display:flex;flex-direction:column;gap:14px}
+.connect h2{margin:0}
+.connect-text p{margin:4px 0 0;color:var(--muted);font-size:15px}
+.li-btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-radius:999px;background:#0a66c2;color:#fff;font-weight:700;font-size:16px;text-decoration:none;padding:12px 20px}
+.li-btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.li-url{margin:0;text-align:center;font-size:14px;color:var(--muted);user-select:all}
 footer{font-size:13px;color:var(--muted);text-align:center}
 @media (prefers-reduced-motion: no-preference){ #cardImg{animation:pop .35s ease-out} @keyframes pop{from{transform:scale(.97);opacity:.4}to{transform:none;opacity:1}} }
 </style>
@@ -139,6 +145,18 @@ footer{font-size:13px;color:var(--muted);text-align:center}
       <div class="btns"><button class="primary" id="baixar" type="button" hidden>Baixar imagem</button></div>
       <p class="tip" id="tip">No celular: toque e segure a imagem para salvar na galeria, ou tire um print. 📸</p>
     </div>
+  </section>
+
+  <section class="connect" aria-labelledby="connTitle">
+    <div class="connect-text">
+      <h2 id="connTitle">Vamos nos conectar?</h2>
+      <p>Me conta como foi o seu plano daqui a 30 dias. 💛</p>
+    </div>
+    <a class="li-btn" href="https://www.linkedin.com/in/jessica--flores/" target="_blank" rel="noopener">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="currentColor"/></svg>
+      Conectar com a Jess no LinkedIn
+    </a>
+    <p class="li-url">linkedin.com/in/jessica--flores</p>
   </section>
 
   <footer>Revise, ajuste e mantenha em movimento. 💛</footer>
@@ -255,8 +273,9 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     ctx.fillStyle="#f6f4ef";ctx.font='800 34px "Bricolage Grotesque", sans-serif';
     ctx.fillText("Vamos nos conectar?",tx,by+128);
     ctx.font='500 27px Figtree, sans-serif';ctx.globalAlpha=.85;
-    ctx.fillText(hasQR?"Aponte a câmera e me encontre":"Me encontre no LinkedIn:",tx,by+170);
-    ctx.fillText(hasQR?"no LinkedIn · Jess Flores":"linkedin.com/in/jessica--flores",tx,by+206);
+    ctx.fillText(hasQR?"Aponte a câmera ou acesse:":"Me encontre no LinkedIn:",tx,by+170);
+    ctx.globalAlpha=1;ctx.font='700 28px Figtree, sans-serif';
+    ctx.fillText("linkedin.com/in/jessica--flores",tx,by+208);
     ctx.globalAlpha=1;
     return c;
   }
