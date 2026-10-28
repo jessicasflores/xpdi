@@ -155,8 +155,8 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     <div class="status" id="status" role="status" aria-live="polite"></div>
     <div id="cardWrap" hidden>
       <img id="cardImg" alt="Cartão com o seu plano de 30 dias">
-      <div class="btns"><button class="primary" id="baixar" type="button" hidden>Baixar imagem</button></div>
-      <p class="tip" id="tip">No celular: toque e segure a imagem para salvar na galeria, ou tire um print. 📸</p>
+      <div class="btns"><button class="primary" id="baixarPdf" type="button" hidden>Baixar PDF</button><button class="ghost" id="baixar" type="button" hidden>Baixar imagem</button></div>
+      <p class="tip" id="tip">No PDF, o botão do LinkedIn é clicável. 📲 A imagem vai pra galeria: você também pode tocar e segurar nela ou tirar um print.</p>
     </div>
   </section>
 
@@ -164,6 +164,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
   const LINKEDIN="https://www.linkedin.com/in/jessica--flores/";
@@ -211,7 +212,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
       out.push(line)});return out;
   }
 
-  let blob=null;
+  let blob=null,lastCanvas=null;
   async function draw(){
     try{await Promise.all([document.fonts.load('800 60px "Bricolage Grotesque"'),document.fonts.load('600 36px Figtree'),document.fonts.load('700 40px Caveat')]);}catch(e){}
     const W=1080,P=84,maxW=W-P*2-70;
@@ -225,7 +226,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     ctx.font='700 40px Caveat, cursive';
     let H=P+290;
     sections.forEach(s=>{s.lines=wrap(ctx,s.a,maxW);H+=60+s.lines.length*48+40});
-    H+=330;
+    H+=380;
     c.width=W;c.height=Math.max(H,1350);
     ctx.fillStyle="#f6f4ef";ctx.fillRect(0,0,W,c.height);
     // faixa de cores
@@ -254,9 +255,9 @@ footer{font-size:13px;color:var(--muted);text-align:center}
       y+=40;
     });
     // rodapé: revisão + QR do LinkedIn
-    const BH=240,by=c.height-P-BH;
+    const BH=290,by=c.height-P-BH;
     ctx.fillStyle="#1b1f2a";ctx.beginPath();ctx.roundRect?ctx.roundRect(P,by,W-P*2,BH,36):ctx.rect(P,by,W-P*2,BH);ctx.fill();
-    const QS=196,qx=P+22,qy=by+22;
+    const QS=210,qx=P+24,qy=by+40;
     let hasQR=false;
     try{
       if(typeof qrcode==="function"){
@@ -272,12 +273,20 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     ctx.fillStyle="#fbbc04";ctx.font='700 42px Caveat, cursive';
     ctx.fillText("Revisar em "+fmt(review),tx,by+68);
     ctx.fillStyle="#f6f4ef";ctx.font='800 34px "Bricolage Grotesque", sans-serif';
-    ctx.fillText("Vamos nos conectar?",tx,by+128);
-    ctx.font='500 27px Figtree, sans-serif';ctx.globalAlpha=.85;
-    ctx.fillText(hasQR?"Aponte a câmera ou acesse:":"Me encontre no LinkedIn:",tx,by+170);
-    ctx.globalAlpha=1;ctx.font='700 28px Figtree, sans-serif';
-    ctx.fillText("linkedin.com/in/jessica--flores",tx,by+208);
+    ctx.fillText("Vamos nos conectar?",tx,by+120);
+    // botão LinkedIn (clicável no PDF)
+    const label="Conectar com a Jess no LinkedIn";
+    ctx.font='700 26px Figtree, sans-serif';
+    const bw=Math.min(W-P-24-tx, 26+38+14+ctx.measureText(label).width+28), bh=64, bx=tx, byy=by+146;
+    ctx.fillStyle="#0a66c2";ctx.beginPath();ctx.roundRect?ctx.roundRect(bx,byy,bw,bh,32):ctx.rect(bx,byy,bw,bh);ctx.fill();
+    ctx.fillStyle="#ffffff";ctx.beginPath();ctx.roundRect?ctx.roundRect(bx+24,byy+13,38,38,7):ctx.rect(bx+24,byy+13,38,38);ctx.fill();
+    ctx.fillStyle="#0a66c2";ctx.font='700 25px Arial, Helvetica, sans-serif';ctx.textAlign="center";ctx.fillText("in",bx+43,byy+41);ctx.textAlign="left";
+    ctx.fillStyle="#ffffff";ctx.font='700 26px Figtree, sans-serif';ctx.fillText(label,bx+76,byy+41,bw-96);
+    ctx.fillStyle="#f6f4ef";ctx.globalAlpha=.8;ctx.font='500 24px Figtree, sans-serif';
+    ctx.fillText("linkedin.com/in/jessica--flores",tx,by+252);
     ctx.globalAlpha=1;
+    c._links=[{x:bx,y:byy,w:bw,h:bh}];
+    if(hasQR)c._links.push({x:qx,y:qy,w:QS,h:QS});
     return c;
   }
 
@@ -289,20 +298,36 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     $("gerar").disabled=true;status("Montando seu cartão…");
     const c=await draw();
     $("cardImg").src=c.toDataURL("image/png");
-    c.toBlob(b=>{blob=b;if(downloads)$("baixar").hidden=false;});
+    lastCanvas=c;c.toBlob(b=>{blob=b;if(downloads){$("baixar").hidden=false;$("baixarPdf").hidden=false;}});
     $("cardWrap").hidden=false;$("gerar").disabled=false;$("gerar").textContent="Atualizar cartão";
     status("Pronto! Seu plano está aqui embaixo. 💛");
     $("cardImg").scrollIntoView({behavior:"smooth",block:"start"});
   });
 
-  $("baixar").addEventListener("click",async()=>{
-    if(!downloads||!blob)return;
-    try{await downloads.save({filename:"meu-xpdi-30-dias.png",data:blob});status("Imagem baixada! Confira seus downloads ou a galeria. ✨")}
+  $("baixar").addEventListener("click",()=>saveFile("meu-xpdi-30-dias.png",blob,"Imagem baixada! Confira seus downloads ou a galeria. ✨"));
+
+  function makePdf(c){
+    const J=window.jspdf&&window.jspdf.jsPDF; if(!J)return null;
+    const pdf=new J({orientation:"portrait",unit:"px",format:[c.width,c.height],hotfixes:["px_scaling"],compress:true});
+    pdf.addImage(c.toDataURL("image/jpeg",0.92),"JPEG",0,0,c.width,c.height);
+    (c._links||[]).forEach(l=>pdf.link(l.x,l.y,l.w,l.h,{url:LINKEDIN}));
+    return pdf.output("blob");
+  }
+  $("baixarPdf").addEventListener("click",()=>{
+    if(!lastCanvas)return;
+    const b=makePdf(lastCanvas);
+    if(!b){status("Não deu pra montar o PDF agora. Baixe a imagem ou tire um print.");return}
+    saveFile("meu-xpdi-30-dias.pdf",b,"PDF baixado! O botão do LinkedIn é clicável. ✨");
+  });
+
+  async function saveFile(name,data,okMsg){
+    if(!downloads||!data)return;
+    try{await downloads.save({filename:name,data});status(okMsg)}
     catch(e){const code=e&&e.code;
       if(code==="declined")status("Tudo bem! Você ainda pode segurar a imagem pra salvar.");
       else if(code==="rate_limited")status("Já tem um pedido aberto. Tenta de novo em instantes.");
-      else{$("baixar").hidden=true;status("Por aqui o download não funciona. Segure a imagem ou tire um print.")}}
-  });
+      else{$("baixar").hidden=true;$("baixarPdf").hidden=true;status("Por aqui o download não funciona. Segure a imagem ou tire um print.")}}
+  }
 })();
 </script>
 
